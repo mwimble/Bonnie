@@ -2,7 +2,15 @@
 #define __MOTOR_H
 
 #include <ros.h>
+#include <Arduino.h>
 #include <QueueList.h>
+#include <Timer5.h>
+#include "RosLogger.h"
+
+class Motor;
+
+extern RosLogger* rlog;
+extern Motor* motor;
 
 class Motor {
 public:
@@ -14,12 +22,13 @@ public:
         STOP
     };
   
-      typedef struct {
+    typedef struct {
         Direction direction;
     } Command;
   
 private:
-  
+    static const char* DIRECTION_STR[5];
+
     static const int I1 = 8;
     static const int I2 = 11;
     static const int I3 = 12;
@@ -68,15 +77,17 @@ private:
         digitalWrite(I1, HIGH);
     }
   
-    void stop() {
-        digitalWrite(SPEED_A, LOW);
-        digitalWrite(SPEED_B, LOW);
-    }
-
 public:
-    Motor(const ros::NodeHandle&  nh) 
-        : _nh(nh) {
+    static bool motorBusy;
+
+    Motor(const ros::NodeHandle&  nh) : _nh(nh) {
         _speed = 127;
+        pinMode(I1, OUTPUT);
+        pinMode(I2, OUTPUT);
+        pinMode(I3, OUTPUT);
+        pinMode(I4, OUTPUT);
+        pinMode(SPEED_A, OUTPUT);
+        pinMode(SPEED_B, OUTPUT);
     }
   
     void enqueue(Command& command) {
@@ -84,9 +95,62 @@ public:
         _commands.push(command);
         sei();
     }
+
+    void run() {
+        if (!_commands.isEmpty() && !motorBusy) {
+            cli();
+            Command command = _commands.pop();
+            motorBusy = true;
+            sei();
+            rlog->info("Motor run command: %s", DIRECTION_STR[command.direction]);
+
+            switch (command.direction) {
+            case FORWARD:
+                forward();
+                break;
+
+            case BACKWARD:
+                backward();
+                break;
+
+            case LEFT_TURN:
+                left();
+                break;
+
+            case RIGHT_TURN:
+                right();
+                break;
+
+            case STOP:
+                stop();
+                break;
+            }
+
+            startTimer5(250000L); // 0.25 sec.
+        }
+    }  
   
+    void stop() {
+        digitalWrite(SPEED_A, LOW);
+        digitalWrite(SPEED_B, LOW);
+    }
+
 };
 
 QueueList<Motor::Command> Motor::_commands;
+bool Motor::motorBusy = false;
+const char* Motor::DIRECTION_STR[] = {
+    "FORWARD",
+    "BACKWARD",
+    "LEFT_TURN",
+    "RIGHT_TURN",
+    "STOP"
+};
+
+ISR(timer5Event) {
+  resetTimer5();
+  Motor::motorBusy = false;
+  motor->stop();
+}
 
 #endif

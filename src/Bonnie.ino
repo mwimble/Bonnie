@@ -9,6 +9,7 @@
 #include "QTRSensors.h"
 #include "QuadratureEncoder.h"
 #include "RosLogger.h"
+#include <Timer5.h>
 
 ros::NodeHandle  	nh;
 LineSensor*			lineSensor;
