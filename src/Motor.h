@@ -126,13 +126,17 @@ public:
                 break;
             }
 
-            startTimer5(250000L); // 0.25 sec.
+            startTimer5(1000000/*250000L*/); // 0.25 sec. #####
         }
     }  
   
     void stop() {
         digitalWrite(SPEED_A, LOW);
         digitalWrite(SPEED_B, LOW);
+    }
+
+    int queueLength() {
+        return _commands.count();
     }
 
 };

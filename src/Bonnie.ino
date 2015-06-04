@@ -29,6 +29,21 @@ void setup() {
 	lineSensor = new LineSensor();
 	lineSensor->calibrate();
 	motor = new Motor(nh);
+	Motor::Command c;
+	c.direction = Motor::FORWARD; motor->enqueue(c);
+	c.direction = Motor::BACKWARD; motor->enqueue(c);
+	c.direction = Motor::LEFT_TURN; motor->enqueue(c);
+	c.direction = Motor::RIGHT_TURN; motor->enqueue(c);
+	for (int i = 0; i < 5; i++) {
+		nh.spinOnce();
+		delay(1000);
+	}
+	
+	for (int i = 0; i < 4; i++) {
+		rlog->info("START UP %d", i);
+		nh.spinOnce();
+		delay(200);
+	}
 }
 
 char buffer[128];
@@ -51,7 +66,9 @@ void loop() {
 	
 	rlog->info("Number: %d, quad: %d", loopCounter++, QuadratureEncoder::Counter());
 	rlog->info(buffer);
+	rlog->info("Queue len: %d", motor->queueLength());
 	quadratureEncoder->info();
+	motor->run();
 	nh.spinOnce();
-	delay(1000);
+	delay(500);
 }
