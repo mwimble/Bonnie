@@ -2,14 +2,17 @@
 
 //#define USE_USBCON 1
 #include <ros.h>
+#include <QueueList.h>
 
 #include "LineSensor.h"
+#include "Motor.h"
 #include "QTRSensors.h"
 #include "QuadratureEncoder.h"
 #include "RosLogger.h"
 
 ros::NodeHandle  	nh;
 LineSensor*			lineSensor;
+Motor*				motor;
 QuadratureEncoder*	quadratureEncoder;
 RosLogger*			rlog;
 
@@ -24,6 +27,7 @@ void setup() {
 	quadratureEncoder = new QuadratureEncoder();
 	lineSensor = new LineSensor();
 	lineSensor->calibrate();
+	motor = new Motor(nh);
 }
 
 char buffer[128];
