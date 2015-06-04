@@ -1,4 +1,6 @@
 #include <string>
+
+//#define USE_USBCON 1
 #include <ros.h>
 
 #include "LineSensor.h"
